@@ -17,7 +17,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 export default function UserProfileModal({ isOpen, onClose }) {
-  const { currentUser, updateUserProfile } = useAuth();
+  const { currentUser, updateUserProfile, resetPassword } = useAuth();
   const state = useStore();
   const { t } = useTranslation();
 
@@ -37,6 +37,29 @@ export default function UserProfileModal({ isOpen, onClose }) {
   
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Password reset states
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+
+  const handleResetPassword = async () => {
+    if (!currentUser?.email) return;
+    setIsResettingPassword(true);
+    setResetError('');
+    setResetSuccess('');
+    try {
+      await resetPassword(currentUser.email);
+      setResetSuccess('Reset link sent! Please check your email inbox.');
+      setTimeout(() => setResetSuccess(''), 6000);
+    } catch (err) {
+      console.error(err);
+      setResetError(err.message || 'Failed to send password reset link.');
+      setTimeout(() => setResetError(''), 6000);
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
 
   const availableSkills = [
     "First Aid & Medical",
@@ -288,6 +311,38 @@ export default function UserProfileModal({ isOpen, onClose }) {
                       placeholder="https://images.unsplash.com/photo-..."
                     />
                   </div>
+                </div>
+
+                {/* Password Reset Section */}
+                <div className="pt-4 border-t border-slate-800 space-y-2">
+                  <label className="block text-slate-300 font-bold text-xs">Security Settings</label>
+                  <div className="flex items-center justify-between bg-slate-800/40 p-4 rounded-2xl border border-slate-800/80">
+                    <div className="space-y-0.5 pr-2">
+                      <h4 className="text-xs font-bold text-white">Reset Account Password</h4>
+                      <p className="text-[10px] text-slate-400">Sends a secure password reset link to your email ({currentUser?.email})</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isResettingPassword}
+                      onClick={handleResetPassword}
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 border border-slate-700 hover:border-slate-600 rounded-xl text-[10px] font-bold transition flex items-center shrink-0"
+                    >
+                      {isResettingPassword ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <span>Reset Password</span>
+                      )}
+                    </button>
+                  </div>
+                  {resetError && (
+                    <div className="text-[10px] text-red-400 font-semibold">{resetError}</div>
+                  )}
+                  {resetSuccess && (
+                    <div className="text-[10px] text-emerald-400 font-semibold">{resetSuccess}</div>
+                  )}
                 </div>
               </div>
             )}
