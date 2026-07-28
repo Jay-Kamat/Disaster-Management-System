@@ -1,6 +1,6 @@
 // Reactive In-Memory Data Store for Disaster Relief Platform
 import { useState, useEffect } from 'react';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { 
   collection, 
   doc, 
@@ -446,6 +446,7 @@ class StoreManager {
       status: "unverified",
       flags: 0,
       autoHidden: false,
+      userId: auth.currentUser?.uid || 'anonymous',
       ...newReport
     };
     await setDoc(doc(db, 'reports', id), reportObj);
@@ -499,6 +500,7 @@ class StoreManager {
     const record = {
       id,
       status: "searching",
+      userId: auth.currentUser?.uid || 'anonymous',
       ...missingData
     };
     await setDoc(doc(db, 'missingPersons', id), record);
