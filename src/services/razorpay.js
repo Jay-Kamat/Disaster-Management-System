@@ -13,7 +13,7 @@ export function triggerRazorpayCheckout(amount, incidentTitle, user = null, onSu
 
   const confirmPayment = window.confirm(
     `[RAZORPAY SECURE CHECKOUT SIMULATOR]\n\n` +
-    `Merchant: Aaryaraksha Disaster Relief Fund\n` +
+    `Merchant: Rakshak Disaster Relief Fund\n` +
     `Incident: ${incidentTitle}\n` +
     `Amount: ₹${numAmount.toLocaleString('en-IN')}\n` +
     `Supported Payment Options: UPI (GooglePay/PhonePe), Cards, Netbanking\n\n` +

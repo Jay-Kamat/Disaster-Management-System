@@ -1,7 +1,7 @@
 export const resources = {
   en: {
     translation: {
-      appName: "Aaryaraksha",
+      appName: "Rakshak",
       tagline: "Crowdsourced Disaster Response & Relief Platform",
       nav: {
         liveMap: "Live Rescue Map",
@@ -134,7 +134,7 @@ export const resources = {
   },
   hi: {
     translation: {
-      appName: "आर्यरक्षा",
+      appName: "रक्षक",
       tagline: "जन-आधारित आपदा प्रतिक्रिया और राहत मंच",
       nav: {
         liveMap: "लाइव बचाव मानचित्र",
@@ -267,7 +267,7 @@ export const resources = {
   },
   mr: {
     translation: {
-      appName: "आर्यरक्षा",
+      appName: "रक्षक",
       tagline: "जन-आधारित आपत्ती प्रतिसाद आणि मदत व्यासपीठ",
       nav: {
         liveMap: "थेट बचाव नकाशा",

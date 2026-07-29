@@ -73,7 +73,7 @@ export default function LiveMap({ onSelectReport, onOpenReportModal, isPickingLo
 
             // Fetch human-readable name for user location
             const geoUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`;
-            fetch(geoUrl, { headers: { 'User-Agent': 'Aaryaraksha-Disaster-Response-Portal' } })
+            fetch(geoUrl, { headers: { 'User-Agent': 'Rakshak-Disaster-Response-Portal' } })
               .then(res => res.json())
               .then(data => {
                 const addr = data.address || {};

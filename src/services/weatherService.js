@@ -11,7 +11,7 @@ export async function fetchLiveWeather(lat = 19.0760, lng = 72.8777) {
     // Fetch weather and location name in parallel
     const [weatherRes, geoRes] = await Promise.all([
       fetch(weatherUrl).catch(e => null),
-      fetch(geoUrl, { headers: { 'User-Agent': 'Aaryaraksha-Disaster-Response-Portal' } }).catch(e => null)
+      fetch(geoUrl, { headers: { 'User-Agent': 'Rakshak-Disaster-Response-Portal' } }).catch(e => null)
     ]);
 
     if (!weatherRes || !weatherRes.ok) throw new Error("Open-Meteo request failed");
