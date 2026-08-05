@@ -17,10 +17,31 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
+let app = null;
+let analytics = null;
+let auth = null;
+let googleProvider = null;
+let db = null;
+let firebaseInitError = null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
+if (!firebaseConfig.apiKey) {
+  firebaseInitError = "Firebase API Key is missing. Please configure VITE_FIREBASE_API_KEY and other Firebase variables in your Vercel environment settings.";
+  console.warn(firebaseInitError);
+} else {
+  try {
+    app = initializeApp(firebaseConfig);
+    try {
+      analytics = getAnalytics(app);
+    } catch (e) {
+      console.warn("Firebase Analytics could not be initialized:", e.message);
+    }
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    db = getFirestore(app);
+  } catch (error) {
+    firebaseInitError = error.message || "Failed to initialize Firebase services.";
+    console.error("Firebase Initialization Error:", error);
+  }
+}
+
+export { app, analytics, auth, googleProvider, db, firebaseInitError };

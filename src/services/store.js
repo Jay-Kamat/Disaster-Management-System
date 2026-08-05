@@ -1,6 +1,7 @@
 // Reactive In-Memory Data Store for Disaster Relief Platform
 import { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   collection, 
   doc, 
@@ -275,6 +276,7 @@ const INITIAL_VOLUNTEERS = [
 class StoreManager {
   constructor() {
     this.listeners = new Set();
+    this.activeUnsubscribers = {};
     this.state = {
       reports: [],
       shelters: [],
@@ -292,6 +294,7 @@ class StoreManager {
     };
 
     this.initFirestoreListeners();
+    this.initAuthListener();
   }
 
   subscribe(listener) {
@@ -304,6 +307,11 @@ class StoreManager {
   }
 
   initFirestoreListeners() {
+    if (!db) {
+      console.warn("Firestore database is not initialized. Skipping listener setup.");
+      return;
+    }
+
     // 1. Reports Listener
     onSnapshot(collection(db, 'reports'), (snapshot) => {
       if (snapshot.empty) {
@@ -317,6 +325,8 @@ class StoreManager {
         this.state = { ...this.state, reports };
         this.notify();
       }
+    }, (error) => {
+      console.error("Error in reports Firestore listener:", error);
     });
 
     // 2. Shelters Listener
@@ -331,6 +341,8 @@ class StoreManager {
         this.state = { ...this.state, shelters };
         this.notify();
       }
+    }, (error) => {
+      console.error("Error in shelters Firestore listener:", error);
     });
 
     // 3. Rescue Units Listener
@@ -345,6 +357,8 @@ class StoreManager {
         this.state = { ...this.state, rescueUnits };
         this.notify();
       }
+    }, (error) => {
+      console.error("Error in rescueUnits Firestore listener:", error);
     });
 
     // 4. Missing Persons Listener
@@ -359,20 +373,8 @@ class StoreManager {
         this.state = { ...this.state, missingPersons };
         this.notify();
       }
-    });
-
-    // 5. Volunteers Listener
-    onSnapshot(collection(db, 'volunteers'), (snapshot) => {
-      if (snapshot.empty) {
-        INITIAL_VOLUNTEERS.forEach(async (vol) => {
-          await setDoc(doc(db, 'volunteers', vol.id), vol);
-        });
-      } else {
-        const volunteers = [];
-        snapshot.forEach(doc => volunteers.push(doc.data()));
-        this.state = { ...this.state, volunteers };
-        this.notify();
-      }
+    }, (error) => {
+      console.error("Error in missingPersons Firestore listener:", error);
     });
 
     // 6. Emergency Alerts Listener
@@ -398,6 +400,8 @@ class StoreManager {
         this.state = { ...this.state, emergencyAlerts };
         this.notify();
       }
+    }, (error) => {
+      console.error("Error in emergencyAlerts Firestore listener:", error);
     });
 
     // 7. Donations Listener
@@ -426,15 +430,70 @@ class StoreManager {
         };
         this.notify();
       }
+    }, (error) => {
+      console.error("Error in donations Firestore listener:", error);
     });
+  }
+
+  initAuthListener() {
+    if (!auth) return;
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        this.subscribeAuthListeners();
+      } else {
+        this.unsubscribeAuthListeners();
+      }
+    });
+  }
+
+  subscribeAuthListeners() {
+    if (!db) return;
+    if (this.activeUnsubscribers.volunteers && this.activeUnsubscribers.users) {
+      return; // Already subscribed
+    }
+
+    // 5. Volunteers Listener
+    if (!this.activeUnsubscribers.volunteers) {
+      this.activeUnsubscribers.volunteers = onSnapshot(collection(db, 'volunteers'), (snapshot) => {
+        if (snapshot.empty) {
+          INITIAL_VOLUNTEERS.forEach(async (vol) => {
+            await setDoc(doc(db, 'volunteers', vol.id), vol);
+          });
+        } else {
+          const volunteers = [];
+          snapshot.forEach(doc => volunteers.push(doc.data()));
+          this.state = { ...this.state, volunteers };
+          this.notify();
+        }
+      }, (error) => {
+        console.error("Error in volunteers Firestore listener:", error);
+      });
+    }
 
     // 8. Users Listener
-    onSnapshot(collection(db, 'users'), (snapshot) => {
-      const users = [];
-      snapshot.forEach(doc => users.push(doc.data()));
-      this.state = { ...this.state, users };
-      this.notify();
-    });
+    if (!this.activeUnsubscribers.users) {
+      this.activeUnsubscribers.users = onSnapshot(collection(db, 'users'), (snapshot) => {
+        const users = [];
+        snapshot.forEach(doc => users.push(doc.data()));
+        this.state = { ...this.state, users };
+        this.notify();
+      }, (error) => {
+        console.error("Error in users Firestore listener:", error);
+      });
+    }
+  }
+
+  unsubscribeAuthListeners() {
+    if (this.activeUnsubscribers.volunteers) {
+      this.activeUnsubscribers.volunteers();
+      delete this.activeUnsubscribers.volunteers;
+    }
+    if (this.activeUnsubscribers.users) {
+      this.activeUnsubscribers.users();
+      delete this.activeUnsubscribers.users;
+    }
+    this.state = { ...this.state, volunteers: [], users: [] };
+    this.notify();
   }
 
   // Action Methods
